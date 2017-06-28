@@ -1,63 +1,28 @@
-version: '3'
+version: '2'
 
 services:
 
-  concourse-db:
-    image: postgres
-    environment:
-    - POSTGRES_DB=concourse
-    - POSTGRES_PASSWORD=concourse_pass
-    - POSTGRES_USER=concourse_user
-    - PGDATA=/database
-
-  concourse-web:
-    image: concourse/concourse
-    command: web
-    links: [concourse-db]
-    depends_on: [concourse-db]
-    ports: ["8888:8080"]
-    volumes: ["./keys/web:/concourse-keys"]
-    environment:
-    - CONCOURSE_POSTGRES_HOST=concourse-db
-    - CONCOURSE_POSTGRES_USER=concourse_user
-    - CONCOURSE_POSTGRES_PASSWORD=concourse_pass
-    - CONCOURSE_POSTGRES_DATABASE=concourse
-    - CONCOURSE_EXTERNAL_URL=http://127.0.0.1:8888
-    - CONCOURSE_BASIC_AUTH_USERNAME=concourse
-    - CONCOURSE_BASIC_AUTH_PASSWORD=password
-    - CONCOURSE_NO_REALLY_I_DONT_WANT_ANY_AUTH
-
-  concourse-worker:
-    image: concourse/concourse
-    command: worker
-    privileged: true
-    links: [concourse-web]
-    depends_on: [concourse-web]
-    volumes: ["./keys/worker:/concourse-keys"]
-    environment:
-    - CONCOURSE_TSA_HOST=concourse-web
-    - CONCOURSE_GARDEN_NETWORK
-
   gitlab:
-    restart: always
     image: sameersbn/gitlab:9.2.7
-    depends_on:
-    - gitlab-cache
-    - gitlab-db
+    restart: always
     ports:
-    - "10080:80"
-    - "10022:22"
-    volumes:
-    - ./data/gitlab:/home/git/data:Z
+      - "10080:80"
+      - "10022:22"
+    volumes_from:
+      - gitlab-data
+    depends_on:
+      - gitlab-data
+      - gitlab-cache
+      - gitlab-db
     environment:
-    - DEBUG=true
+    - DEBUG=false
 
     - DB_ADAPTER=postgresql
     - DB_HOST=gitlab-db
     - DB_PORT=5432
     - DB_USER=gitlab
-    - DB_PASS=password
-    - DB_NAME=gitlabhq_production
+    - DB_PASS=gitlab
+    - DB_NAME=gitlab
 
     - REDIS_HOST=gitlab-cache
     - REDIS_PORT=6379
@@ -167,23 +132,30 @@ services:
     - OAUTH_AZURE_API_SECRET=
     - OAUTH_AZURE_TENANT_ID=
 
+  gitlab-data:
+    image: busybox
+    volumes:
+      - /home/git/data
+
   gitlab-cache:
     restart: always
-    image: redis
+    image: redis:3.2
     command:
-    - --loglevel warning
+      - --loglevel warning
 
   gitlab-db:
+    image: postgres:9.6-alpine
     restart: always
-    image: postgres
     environment:
-    - POSTGRES_DB=gitlabhq_production
-    - POSTGRES_PASSWORD=password
-    - POSTGRES_USER=gitlab
+      POSTGRES_DB: gitlab
+      POSTGRES_USER: gitlab
+      POSTGRES_PASSWORD: gitlab
+    volumes_from:
+      - gitlab-db-data
+    depends_on:
+      - gitlab-db-data
 
-  nexus:
-    image: sonatype/nexus3
+  gitlab-db-data:
+    image: busybox
     volumes:
-      - ./data/nexus-data:/nexus-data
-    ports:
-      - "1234:8081"
+      - /var/lib/postgresql/data

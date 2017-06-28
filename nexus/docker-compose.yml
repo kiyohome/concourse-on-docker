@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+
+  nexus:
+    image: sonatype/nexus3:3.3.2
+    #restart: always
+    ports:
+      - "18081:8081"
+    volumes_from:
+      - nexus-data
+    depends_on:
+      - nexus-data
+
+  nexus-data:
+    image: sonatype/nexus3:3.3.2
+    command:
+      - "echo"
+      - "data-only container for Nexus"
