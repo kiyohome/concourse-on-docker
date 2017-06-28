@@ -23,7 +23,7 @@ $ docker-compose up -d
 - Set pipeline
 ```
 $ fly -t main login -c http://localhost:8888/ -k
-$
+$ fly -t main sp -p nablarch-example-web -c pipeline.yml -l credentials.yml
 
 ### GitLab
 - Install
@@ -35,6 +35,38 @@ $ docker-compose up -d
 - Sign in
   - Username: root
   - Password: password
+
+### Sonarqube
+- Install
+```
+$ cd sonarqube
+$ docker-compose up -d
+```
+- Access "http://127.0.0.1:9000/" in the browser
+- Sign in
+  - Username: admin
+  - Password: admin
+- Set proxy, if in proxy
+  - https://docs.sonarqube.org/display/SONAR/Update+Center#UpdateCenter-UsingtheUpdateCenterbehindaProxy
+- Install plugins
+  - Administration > System > Update Center
+    - Available: ON
+    - Search: <input keywords>
+  - plugins
+    - SonarJava
+    - Git
+  - Restart
+- Add sonar-maven-plugin
+  - Add property to pom.xml
+```
+<properties>
+  <sonar.host.url>http://sonarqube:9000</sonar.host.url>
+</properties>
+```
+  - Run
+```
+mvn clean verify sonar:sonar
+```
 
 ## Usecase
 
