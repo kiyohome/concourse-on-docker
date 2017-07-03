@@ -21,12 +21,6 @@ $ docker-compose up -d
   - team: main
   - username: concourse
   - password: password
-- Set pipeline
-
-```
-$ fly -t main login -c http://localhost:8888/ -k
-$ fly -t main sp -p nablarch-example-web -c pipeline.yml -l credentials.yml
-```
 
 ### GitLab
 
@@ -65,19 +59,6 @@ $ docker-compose up -d
     - SonarJava
     - Git
   - Restart
-- Add property for sonar-maven-plugin to pom.xml
-
-```
-<properties>
-  <sonar.host.url>http://sonarqube:9000</sonar.host.url>
-</properties>
-```
-
-- Run sonar
-
-```
-mvn clean verify sonar:sonar
-```
 
 ### Nexus
 
@@ -93,7 +74,21 @@ $ docker-compose up -d
   - Username: admin
   - Password: admin123
 
-## Usecase
+### Rocket.Chat
+
+- Install
+
+```
+$ cd rocketchat
+$ docker-compose up -d
+```
+
+- Access "http://127.0.0.1:13000/" in the browser
+- Register a new account
+
+## Usecase for nablarch-example-web
+
+### Prepare repository
 
 - Create group and project on GitLab
   - group: lapras
@@ -113,4 +108,85 @@ $ git push -u origin master
 ```
 $ git checkout -b develop
 $ git push origin develop
+```
+
+### Code analysis with Sonar
+
+- Add property for sonar-maven-plugin to pom.xml
+
+```
+<properties>
+  <sonar.host.url>http://sonarqube:9000</sonar.host.url>
+</properties>
+```
+
+- Run sonar
+
+```
+mvn clean verify sonar:sonar
+```
+
+### Nofify from Concourse to Rocket.Chat
+
+using https://github.com/cloudfoundry-community/slack-notification-resource
+
+- Create channel on Rocket.Chat
+  - Name: concourse
+- Create Incomming WebHook on Rocket.Chat
+  - Administration > Integrations > NEW INTEGRATION > Incomming WebHook
+    - Enabled: true
+    - Name: concourse
+    - Post to Channel: #concourse
+- Copy the WebHook URL to char resource in pipeline.yml
+
+```
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+
+resources:
+- name: chat
+  type: slack-notification
+  source:
+    url: <Incomming WebHook>
+
+jobs:
+- name: unit-test
+  plan:
+  - aggregate:
+    - get: …
+  - task: mvn-test
+    image: …
+    on_success:
+      put: chat
+      params:
+        no_proxy: rocketchat
+        channel: '#concourse'
+        text: http://localhost:8888/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+        attachments:
+          - title: Job Success!
+            color: "good"
+    on_failure:
+      put: chat
+      params:
+        no_proxy: rocketchat
+        channel: '#concourse'
+        text: http://localhost:8888/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+        attachments:
+          - title: Job Failure!
+            color: "danger"
+```
+
+### Add pipeline to nablarch-example-web
+
+- Copy ci directory to nablarch-example-web
+- Download fly.exe from the top page of Concourse
+- Set pipeline on ci directory
+
+```
+$ fly -t main login -c http://localhost:8888/ -k
+$ fly -t main sp -p nablarch-example-web -c pipeline.yml -l credentials.yml
 ```

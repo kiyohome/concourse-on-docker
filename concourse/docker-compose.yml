@@ -3,7 +3,7 @@ version: '2'
 services:
 
   concourse-worker:
-    image: concourse/concourse:3.2.1
+    image: concourse/concourse:3.3.0
     restart: always
     command: worker
     privileged: true
@@ -12,14 +12,14 @@ services:
       CONCOURSE_GARDEN_NETWORK:
       http_proxy:
       https_proxy:
-      no_proxy: gitlab,sonarqube
+      no_proxy: gitlab,sonarqube,rocketchat
     volumes:
       - ./keys/worker:/concourse-keys
     depends_on:
       - concourse-web
 
   concourse-web:
-    image: concourse/concourse:3.2.1
+    image: concourse/concourse:3.3.0
     restart: unless-stopped
     command: web
     environment:
