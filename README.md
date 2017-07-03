@@ -180,6 +180,33 @@ jobs:
             color: "danger"
 ```
 
+### Executable jar using waitt
+
+- Bump to 1.2.0-SNAPSHOT
+```
+      <plugin>
+        <groupId>net.unit8.waitt</groupId>
+        <artifactId>waitt-maven-plugin</artifactId>
+        <version>1.2.0-SNAPSHOT</version>
+        <configuration>
+          <servers>
+            <server>
+              <groupId>net.unit8.waitt.server</groupId>
+              <artifactId>waitt-tomcat8</artifactId>
+              <version>1.2.0-SNAPSHOT</version>
+            </server>
+          </servers>
+        </configuration>
+      </plugin>
+```
+
+- Run executable jar
+
+```
+mvn waitt:jar
+java -jar target/nablarch-example-web-5u10-standalone.jar -d src/main/webapp -p 3333
+```
+
 ### Add pipeline to nablarch-example-web
 
 - Copy ci directory to nablarch-example-web
