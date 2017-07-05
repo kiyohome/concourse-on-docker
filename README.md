@@ -244,7 +244,45 @@ $ fly -t main sp -p nablarch-example-web -c pipeline.yml -l credentials.yml
     - Group > Member repositories > Members: docker-hub
 - Set http proxy on Nexus, if necessary
   - Server administration and configuration > System > HTTP
-- Update repository in pom.xml
+- Update repository and  in pom.xml
+```
+  <repositories>
+    <repository>
+      <id>private-public</id>
+      <url>https://<host>:18443/repository/maven-public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>private-public-plugin</id>
+      <url>https://<host>:18443/repository/maven-public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <distributionManagement>
+    <repository>
+      <id>private-release</id>
+      <url>https://<host>:18443/repository/maven-releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>private-snapshot</id>
+      <url>https://<host>:18443/repository/maven-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+```
 - Update docker-image resource in pipeline.yml
 ```
 - name: m2
