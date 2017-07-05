@@ -12,7 +12,7 @@ services:
       CONCOURSE_GARDEN_NETWORK:
       http_proxy:
       https_proxy:
-      no_proxy: gitlab,sonarqube,rocketchat
+      no_proxy: gitlab,sonarqube,rocketchat,nexus
     volumes:
       - ./keys/worker:/concourse-keys
     depends_on:

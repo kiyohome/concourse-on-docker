@@ -217,3 +217,43 @@ java -jar target/nablarch-example-web-5u10-standalone.jar -d src/main/webapp -p 
 $ fly -t main login -c http://localhost:8888/ -k
 $ fly -t main sp -p nablarch-example-web -c pipeline.yml -l credentials.yml
 ```
+
+### Configure mvn/docker repository on Nexus
+
+- Server administration and configuration > Repositories > Create repository
+  - seasar
+    - Recipe: maven2(proxy)
+    - Name: seasar
+    - Proxy > Remote storage: http://maven.seasar.org/maven2
+  - clojars
+    - Recipe: maven2(proxy)
+    - Name: clojars
+    - Proxy > Remote storage: https://clojars.org/repo
+  - sonatype
+    - Recipe: maven2(proxy)
+    - Name: sonatype
+    - Proxy > Remote storage: https://oss.sonatype.org/content/repositories/snapshots/
+  - docker-hub
+    - Recipe: docker(proxy)
+    - Name: docker-hub
+    - Proxy > Remote storage: https://registry-1.docker.io
+  - docker-public
+    - Recipe: docker(group)
+    - Name: docker-public
+    - Repository Connectors > HTTPS: 18444
+    - Group > Member repositories > Members: docker-hub
+- Set http proxy on Nexus, if necessary
+  - Server administration and configuration > System > HTTP
+- Update repository in pom.xml
+- Update docker-image resource in pipeline.yml
+```
+- name: m2
+  type: docker-image
+  source:
+    username: {{nexus-username}}
+    password: {{nexus-password}}
+    repository: <host>:<port>/kiyohome/nablarch-in-mvn
+    tag: 5u10-1
+    insecure_registries:
+      - <host>:<port>
+```
