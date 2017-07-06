@@ -154,30 +154,41 @@ resources:
     url: <Incomming WebHook>
 
 jobs:
-- name: unit-test
+- name: unit-test-develop
   plan:
   - aggregate:
-    - get: …
+    - get: source
+      resource: develop
+      trigger: true
+    - get: mvn
+    - get: m2
   - task: mvn-test
-    image: …
-    on_success:
-      put: chat
-      params:
-        no_proxy: rocketchat
-        channel: '#concourse'
-        text: http://localhost:8888/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        attachments:
-          - title: Job Success!
-            color: "good"
-    on_failure:
-      put: chat
-      params:
-        no_proxy: rocketchat
-        channel: '#concourse'
-        text: http://localhost:8888/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        attachments:
-          - title: Job Failure!
-            color: "danger"
+    image: mvn
+    file: source/ci/tasks/mvn-test.yml
+  on_success:
+    <<: *notify_success
+  on_failure:
+    <<: *notify_failure
+
+notify_success: &notify_success
+  put: chat
+  params:
+    no_proxy: rocketchat
+    channel: '#concourse'
+    text: "$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME: $ATC_EXTERNAL_URL/builds/$BUILD_ID"
+    attachments:
+      - title: Job Success!
+        color: "good"
+
+notify_failure: &notify_failure
+  put: chat
+  params:
+    no_proxy: rocketchat
+    channel: '#concourse'
+    text: "$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME: $ATC_EXTERNAL_URL/builds/$BUILD_ID"
+    attachments:
+      - title: Job Failure!
+        color: "danger"
 ```
 
 ### Executable jar using waitt
@@ -294,4 +305,57 @@ $ fly -t main sp -p nablarch-example-web -c pipeline.yml -l credentials.yml
     tag: 5u10-1
     insecure_registries:
       - <host>:<port>
+```
+
+### Update the merge request status
+
+using https://github.com/swisscom/gitlab-merge-request-resource
+
+```
+resource_types:
+- name: merge-request
+  type: docker-image
+  source:
+    repository: mastertinner/gitlab-merge-request-resource
+
+resources:
+- name: mr
+  type: merge-request
+  source:
+    private_token: {{git-accesstoken}}
+    username: {{git-username}}
+    password: {{git-password}}
+    uri: http://ito.kiyohito@172.24.34.14:10080/lapras/nablarch-example-web.git
+    no_ssl: true
+
+jobs:
+- name: unit-test-mr
+  plan:
+  - aggregate:
+    - get: source
+      resource: mr
+      trigger: true
+    - get: mvn
+    - get: m2
+  - put: mr
+    params:
+      repository: source
+      status: running
+  - task: mvn-test
+    image: mvn
+    file: source/ci/tasks/mvn-test.yml
+    on_success:
+      put: mr
+      params:
+        repository: source
+        status: success
+    on_failure:
+      put: mr
+      params:
+        repository: source
+        status: failed
+  on_success:
+    <<: *notify_success
+  on_failure:
+    <<: *notify_failure
 ```
