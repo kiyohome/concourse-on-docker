@@ -10,6 +10,7 @@ services:
     environment:
       CONCOURSE_TSA_HOST: concourse-web
       CONCOURSE_GARDEN_NETWORK:
+      no_proxy: rocketchat
     volumes:
       - ./keys/worker:/concourse-keys
     depends_on:
