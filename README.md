@@ -52,7 +52,7 @@
 $ git clone https://github.com/nablarch/nablarch-example-web.git
 $ cd nablarch-example-web
 $ git remote rm origin
-$ git remote add origin http://root@localhost:10080/lapras/nablarch-example-web.git
+$ git remote add origin http://root@localhost:10080/sample/nablarch-example-web.git
 $ git push -u origin master
 ```
 - Create develop branch
@@ -126,6 +126,10 @@ chat-webhook-url: http://rocketchat:3000/hooks/token
     - Group > Member repositories > Members: docker-hub
 - Add repository definition to nablarch-exmaple-web/pom.xml
   - Copy ci/pom.xml to nablarch-exmaple-web/pom.xml
+
+### Update parameters for pipeline
+
+- Update ci/params.yml according to your environment
 
 ### Set pipeline to Concourse
 
