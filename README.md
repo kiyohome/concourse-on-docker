@@ -40,6 +40,13 @@
 - Notify code analysis result on Concourse to Merge Request on Rocket.Chat
   - https://gitlab.talanlabs.com/gabriel-allaigre/sonar-gitlab-plugin
 
+## How to install
+
+- According to your environment, docker-compose is combined to launch tools
+```
+$ docker-compose -f concourse/docker-compose.yml -f rocketchat/docker-compose.yml … up -d
+```
+
 ## How to use
 
 ### Prepare project on GitLab
@@ -52,7 +59,7 @@
 $ git clone https://github.com/nablarch/nablarch-example-web.git
 $ cd nablarch-example-web
 $ git remote rm origin
-$ git remote add origin http://root@localhost:10080/sample/nablarch-example-web.git
+$ git remote add origin http://root@gitlab:10080/sample/nablarch-example-web.git
 $ git push -u origin master
 ```
 - Create develop branch
