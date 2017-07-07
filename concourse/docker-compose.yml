@@ -1,0 +1,55 @@
+version: '2'
+
+services:
+
+  concourse-worker:
+    image: concourse/concourse:3.3.0
+    restart: always
+    command: worker
+    privileged: true
+    environment:
+      CONCOURSE_TSA_HOST: concourse-web
+      CONCOURSE_GARDEN_NETWORK:
+      no_proxy: rocketchat
+    volumes:
+      - ./keys/worker:/concourse-keys
+    depends_on:
+      - concourse-web
+
+  concourse-web:
+    image: concourse/concourse:3.3.0
+    restart: unless-stopped
+    command: web
+    environment:
+      CONCOURSE_POSTGRES_HOST: concourse-db
+      CONCOURSE_POSTGRES_USER: concourse
+      CONCOURSE_POSTGRES_PASSWORD: concourse
+      CONCOURSE_POSTGRES_DATABASE: concourse
+      CONCOURSE_EXTERNAL_URL: http://127.0.0.1:8888
+      CONCOURSE_BASIC_AUTH_USERNAME: concourse
+      CONCOURSE_BASIC_AUTH_PASSWORD: password
+      CONCOURSE_NO_REALLY_I_DONT_WANT_ANY_AUTH:
+    ports:
+      - "8888:8080"
+    volumes:
+      - ./keys/web:/concourse-keys
+    depends_on:
+      - concourse-db
+
+  concourse-db:
+    image: postgres:9.6-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: concourse
+      POSTGRES_USER: concourse
+      POSTGRES_PASSWORD: concourse
+    volumes_from:
+      - concourse-db-data
+    depends_on:
+      - concourse-db-data
+
+  concourse-db-data:
+    image: busybox
+    volumes:
+      - /var/lib/postgresql/data
+

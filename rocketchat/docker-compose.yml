@@ -1,0 +1,32 @@
+version: '2'
+
+services:
+
+  rocketchat:
+    container_name: rocketchat
+    image: rocketchat/rocket.chat:latest
+    restart: always
+    environment:
+      - MONGO_URL=mongodb://rocketchat-db:27017/rocketchat
+      - ROOT_URL=http://localhost
+    ports:
+      - 13000:3000
+    depends_on:
+      - rocketchat-db
+
+  rocketchat-db:
+    container_name: rocketchat-db
+    image: mongo:latest
+    restart: always
+    command: mongod --smallfiles
+    ports:
+      - 27017
+    volumes_from:
+      - rocketchat-db-data
+    depends_on:
+      - rocketchat-db-data
+
+  rocketchat-db-data:
+    image: busybox
+    volumes:
+      - /data/db

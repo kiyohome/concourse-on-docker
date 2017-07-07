@@ -1,0 +1,21 @@
+version: '2'
+
+services:
+
+  nexus:
+    image: kiyohome/nexus-with-ssl:3.3.2
+    restart: always
+    ports:
+      - "18081:8081"
+      - "18443:8443"
+      - "18444:18444"
+    volumes_from:
+      - nexus-data
+    depends_on:
+      - nexus-data
+
+  nexus-data:
+    image: sonatype/nexus3:3.3.2
+    command:
+      - "echo"
+      - "data-only container for Nexus"
