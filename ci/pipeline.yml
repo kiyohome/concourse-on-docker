@@ -1,0 +1,226 @@
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: ((docker-repo-host-port))/cfcommunity/slack-notification-resource
+    insecure_registries:
+      - ((docker-repo-host-port))
+    username: ((docker-repo-username))
+    password: ((docker-repo-password))
+
+- name: merge-request
+  type: docker-image
+  source:
+    repository: ((docker-repo-host-port))/mastertinner/gitlab-merge-request-resource
+    insecure_registries:
+      - ((docker-repo-host-port))
+    username: ((docker-repo-username))
+    password: ((docker-repo-password))
+
+resources:
+- name: mr
+  type: merge-request
+  source:
+    uri: ((git-project-url))
+    username: ((git-username))
+    password: ((git-password))
+    private_token: ((git-access-token))
+    no_ssl: true
+
+- name: develop
+  type: git
+  source:
+    uri: ((git-project-url))
+    username: ((git-username))
+    password: ((git-password))
+    branch: develop
+
+- name: mvn
+  type: docker-image
+  source:
+    repository: ((docker-repo-host-port))/library/maven
+    insecure_registries:
+      - ((docker-repo-host-port))
+    username: ((docker-repo-username))
+    password: ((docker-repo-password))
+
+- name: m2
+  type: docker-image
+  source:
+    repository: ((docker-repo-host-port))/kiyohome/nablarch-in-mvn
+    tag: 5u10-1
+    insecure_registries:
+      - ((docker-repo-host-port))
+    username: ((docker-repo-username))
+    password: ((docker-repo-password))
+
+- name: ssh
+  type: docker-image
+  source:
+    repository: ((docker-repo-host-port))/kiyohome/ssh
+    tag: 0.1.0
+    insecure_registries:
+      - ((docker-repo-host-port))
+    username: ((docker-repo-username))
+    password: ((docker-repo-password))
+
+- name: chat
+  type: slack-notification
+  source:
+    url: ((chat-webhook-url))
+
+jobs:
+- name: unit-test-mr
+  plan:
+  - aggregate:
+    - get: source
+      resource: mr
+      trigger: true
+    - get: mvn
+    - get: m2
+  - put: mr
+    params:
+      repository: source
+      status: running
+  - task: mvn-test
+    image: mvn
+    file: source/ci/tasks/mvn-test.yml
+    on_success:
+      put: mr
+      params:
+        repository: source
+        status: success
+    on_failure:
+      put: mr
+      params:
+        repository: source
+        status: failed
+  on_success:
+    <<: *notify_success
+  on_failure:
+    <<: *notify_failure
+
+- name: code-analysis-mr
+  plan:
+  - aggregate:
+    - get: source
+      resource: mr
+      trigger: true
+      passed:
+      - unit-test-mr
+    - get: mvn
+    - get: m2
+  - task: mvn-sonar-to-gitlab
+    image: mvn
+    file: source/ci/tasks/mvn-sonar-to-gitlab.yml
+    params:
+      SONAR_URL: ((sonar-url))
+      GITLAB_URL: ((git-url))
+      GITLAB_USER_TOKEN: ((git-access-token))
+      GITLAB_PROJECT_ID: ((git-project-id))
+  on_success:
+    <<: *notify_success
+  on_failure:
+    <<: *notify_failure
+
+- name: unit-test-develop
+  plan:
+  - aggregate:
+    - get: source
+      resource: develop
+      trigger: true
+    - get: mvn
+    - get: m2
+  - task: mvn-test
+    image: mvn
+    file: source/ci/tasks/mvn-test.yml
+  on_success:
+    <<: *notify_success
+  on_failure:
+    <<: *notify_failure
+
+- name: code-analysis-develop
+  plan:
+  - aggregate:
+    - get: source
+      resource: develop
+      trigger: true
+      passed:
+      - unit-test-develop
+    - get: mvn
+    - get: m2
+  - task: mvn-sonar
+    image: mvn
+    file: source/ci/tasks/mvn-sonar.yml
+    params:
+      SONAR_URL: ((sonar-url))
+  on_success:
+    <<: *notify_success
+  on_failure:
+    <<: *notify_failure
+
+- name: deploy-to-mvn-develop
+  plan:
+  - aggregate:
+    - get: source
+      resource: develop
+      trigger: true
+      passed:
+      - code-analysis-develop
+    - get: mvn
+    - get: m2
+  - task: mvn-deploy
+    image: mvn
+    file: source/ci/tasks/mvn-deploy.yml
+    params:
+      MVN_REPO_USERNAME: ((mvn-repo-username))
+      MVN_REPO_PASSWORD: ((mvn-repo-password))
+  on_success:
+    <<: *notify_success
+  on_failure:
+    <<: *notify_failure
+
+- name: deploy-to-demo-develop
+  plan:
+  - aggregate:
+    - get: source
+      resource: develop
+      trigger: true
+      passed:
+      - code-analysis-develop
+    - get: mvn
+    - get: m2
+    - get: ssh
+  - task: mvn-jar
+    image: mvn
+    file: source/ci/tasks/mvn-jar.yml
+  - task: deploy-to-demo
+    image: ssh
+    file: source/ci/tasks/deploy-to-demo.yml
+    params:
+      DEMO_HOST: ((demo-host))
+      DEMO_PORT: ((demo-port))
+      DEMO_USERNAME: ((demo-username))
+      DEMO_PASSWORD: ((demo-password))
+  on_success:
+    <<: *notify_success
+  on_failure:
+    <<: *notify_failure
+
+notify_success: &notify_success
+  put: chat
+  params:
+    channel: '#concourse'
+    text: "$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME: $ATC_EXTERNAL_URL/builds/$BUILD_ID"
+    attachments:
+      - title: Job Success!
+        color: "good"
+
+notify_failure: &notify_failure
+  put: chat
+  params:
+    channel: '#concourse'
+    text: "$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME: $ATC_EXTERNAL_URL/builds/$BUILD_ID"
+    attachments:
+      - title: Job Failure!
+        color: "danger"

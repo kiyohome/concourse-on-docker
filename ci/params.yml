@@ -1,0 +1,23 @@
+git-url: http://gitlab:10080
+git-username: root
+git-password: password
+git-access-token: token
+
+git-project-url: http://gitlab:10080/group/nablarch-example-web.git
+git-project-id: group/nablarch-example-web
+
+mvn-repo-username: admin
+mvn-repo-password: admin123
+
+docker-repo-host-port: nexus:18444
+docker-repo-username: admin
+docker-repo-password: admin123
+
+sonar-url: http://sonarqube:9000
+
+chat-webhook-url: http://rocketchat:3000/hooks/token
+
+demo-host: demo-server-host
+demo-port: demo-server-port
+demo-username: demo-server-ssh-user
+demo-password: demo-server-ssh-password
