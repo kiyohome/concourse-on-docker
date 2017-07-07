@@ -40,6 +40,8 @@
 - Notify code analysis result on Concourse to Merge Request on Rocket.Chat
   - https://gitlab.talanlabs.com/gabriel-allaigre/sonar-gitlab-plugin
 
+![pipeline](https://github.com/kiyohome/concourse-on-docker/raw/images/pipeline.png "pipeline")
+
 ## How to install
 
 - According to your environment, docker-compose is combined to launch tools
