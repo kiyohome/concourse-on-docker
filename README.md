@@ -44,7 +44,7 @@
 
 - According to your environment, docker-compose is combined to launch tools
 ```
-$ docker-compose -f concourse/docker-compose.yml -f rocketchat/docker-compose.yml … up -d
+$ docker-compose -f concourse/docker-compose.yml -f rocketchat/docker-compose.yml -f ... up -d
 ```
 
 ## How to use
