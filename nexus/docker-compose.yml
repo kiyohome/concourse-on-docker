@@ -5,8 +5,11 @@ services:
   nexus:
     image: kiyohome/nexus-with-ssl:3.3.2
     restart: always
+    environment:
+      NEXUS_CONTEXT: nexus
     ports:
       - "18081:8081"
+      - "18082:8082"
       - "18443:8443"
       - "18444:18444"
     volumes_from:

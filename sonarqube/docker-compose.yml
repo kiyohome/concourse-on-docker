@@ -11,6 +11,8 @@ services:
       SONARQUBE_JDBC_PASSWORD: sonar
     ports:
       - "9000:9000"
+    volumes:
+      - ../sonarqube/sonar.properties:/opt/sonarqube/conf/sonar.properties
     volumes_from:
       - sonarqube-data
     depends_on:
@@ -20,7 +22,6 @@ services:
   sonarqube-data:
     image: busybox
     volumes:
-      - /opt/sonarqube/conf
       - /opt/sonarqube/data
       - /opt/sonarqube/extensions
       - /opt/sonarqube/lib/bundled-plugins
