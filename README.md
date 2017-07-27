@@ -12,17 +12,6 @@
   - username: root
   - password: password
 - Sonarqube
-  - port: 9000
-  - username: admin
-  - password: admin
-  - if in proxy
-    - https://docs.sonarqube.org/display/SONAR/Update+Center#UpdateCenter-UsingtheUpdateCenterbehindaProxy
-  - install plugins
-    - Administration > System > Update Center
-    - plugins
-      - SonarJava
-      - Git
-      - GitLab
 - Nexus with ssl configuration
   - port: 18081
   - username: admin
@@ -44,10 +33,35 @@
 
 ## How to install
 
-- According to your environment, docker-compose is combined to launch tools
+### Sonarqube
+
 ```
-$ docker-compose -f concourse/docker-compose.yml -f rocketchat/docker-compose.yml -f ... up -d
+$ cd sonarqube/
+$ vi sonar.properties # if necessary
+$ docker-compose up -d
 ```
+
+- Access
+  - http://localhost:9000/sonarqube
+- Log in
+  - username: admin
+  - password: admin
+- Install plugins
+  - Administration > System > Update Center
+    - plugins
+      - SonarJava, Git ... etc
+
+### Rocket.Chat
+
+```
+$ cd rocketchat/
+$ docker-compose up -d
+```
+- Access
+  - http://localhost:13000/rocketchat
+- Register user
+  - username: admin
+  - password: admin
 
 ## How to use
 

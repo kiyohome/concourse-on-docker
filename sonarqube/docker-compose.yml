@@ -3,7 +3,7 @@ version: "2"
 services:
 
   sonarqube:
-    image: sonarqube:6.4-alpine
+    image: sonarqube:5.6.6-alpine
     restart: always
     environment:
       SONARQUBE_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonar
@@ -27,7 +27,7 @@ services:
       - /opt/sonarqube/lib/bundled-plugins
 
   sonarqube-db:
-    image: postgres:9.6-alpine
+    image: postgres:9.5.7-alpine
     restart: always
     environment:
       POSTGRES_DB: sonar
